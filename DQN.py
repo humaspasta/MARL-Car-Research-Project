@@ -23,4 +23,18 @@ class DQN(torch.nn.Module):
 
 
 
+def training(model:torch.nn.Module, data, epochs):
+
+    for epoch in epochs:
+        with torch.no_grad():
+            for state in data:
+                next_q = model(state)
+                action = torch.max(next_q)
+                
+
+
+
+
+
+
 
