@@ -11,15 +11,12 @@ action results in the slow but forward movement of the car so do nothing does no
 
 # 1 Data Collection
 
-All data collection and formatting is done useing selenium which scrapes an environment that exists on an online website. Since the mode of learning is offline, we collect tabular data from the website (since the website is kind enough to us)
-which are tuples, respresenting each state in a run, of the form (action , x , y vx, vy , sensor1, sensor2, sensor3,...sensor n) where n is an odd integer. Each sensor starts at 0 degrees on the circular agent and shoots a line radially outward from the circular agent and returns the distance to a target which is where that sensor line intersects with an object.
+All data collection and formatting is done useing selenium which scrapes an environment that exists on an online website. Since the mode of learning is offline, we collect tabular data from the website in the form of tuples. For each time step $$t$$, the website returns a tuple of the form $$(action , x , y vx, vy , sensor1, sensor2, sensor3,...sensor n)$$ where n is an odd integer from some $$T > 0$$ time total steps. Each sensor is a line that shoots radially outward from the agent and returns the distance from the agent to where the line intersects with an object (another car or the track walls).
 
-The lines are inputted as features to our model. 
-
-The data collection step involves building the **agent.py** class. This class scrapes the website, inputs the networks values (which also handles formatting) and allows the simulation to run until 1000+ states are collected.
+The data collection step involves building the **agent.py** class. This class scrapes the website, inputs the networks values (with correct formatting) and allows the simulation to run until 1000+ steps are collected. 
 When the states appear in the box, the agent formats the data into (state, action, reward) tuples and returns the data as is. The pipelines summary is therefore
 
-### network stored locally -> website -> data formatter -> formatted data. 
+### agent.py -> website -> data formatter (in agent.py) -> formatted data. 
 
 When the data is formatted we input the data into the model. Note that the reward is calculated within the agent.py class. 
 
@@ -33,11 +30,11 @@ The training involves three different pieces:
 
 # The Model
 
-The model is a sequential neural network called DQN which is a misleading name because the same model is used for both DQN and Policy gradient methods. The model consists of the following layers
+The model is a sequential neural network, the same model is used for both DQN and Policy gradient methods. The model consists of the following layers
 
-## Linear(n , 50) -> ReLu -> Linear(50 , 25) -> ReLu -> layer3(25 , 4) 
+## Linear(n , 50) -> ReLu -> Linear(50 , 25) -> ReLu -> Linear(25 , 4) 
 
-The output layer values correspond to the 4 values that are used to determine the decision.
+The output layer values correspond to the 4 possible actions in the action space. 
 
 # 2 Reward function
 
