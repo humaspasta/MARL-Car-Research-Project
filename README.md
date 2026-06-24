@@ -66,7 +66,7 @@ My reason for using e here was being exponential functions (with a negative coef
 Constants $\alpha, \beta, \gamma, \nu$ are intended to weight each of these values accordingly. In my program, my weights are 0.1, 0.001, -1, -3 respectively. 
 
 
-##Results
+# Results
 
 After about 5000 training epochs, the car could sucessfully drive on its own around the track without bumping into any walls. The car maintains a nearly fixed distance from the internal wall and travels around the track at a near constant speed (more plots on this soon). When faced with an obstruction, the car will dodge it and return back to its intended track of motion. An issue that occurs with the setup is that equidistant sensors makes it harder for the car to see well in advance since some targets slip the view of the sensors until its too late for the agent to dodge. A simple fix to this would be a larger model with more sensors or perhaps letting the sensors not be equidistant from each other and instead concentrate them at the front of the car to detect the path of motion. The car also tends to take a path that is closer to the inside of the track. A car traveling on the outside track would be more efficent at gaining distance. 
 
