@@ -71,6 +71,9 @@ Constants $\alpha, \beta, \gamma, \nu$ are intended to weight each of these valu
 After about 5000 training epochs, the car could sucessfully drive on its own around the track without bumping into any walls. The car maintains a nearly fixed distance from the internal wall and travels around the track at a near constant speed (more plots on this soon). When faced with an obstruction, the car will dodge it and return back to its intended track of motion. An issue that occurs with the setup is that equidistant sensors makes it harder for the car to see well in advance since some targets slip the view of the sensors until its too late for the agent to dodge. A simple fix to this would be a larger model with more sensors or perhaps letting the sensors not be equidistant from each other and instead concentrate them at the front of the car to detect the path of motion. The car also tends to take a path that is closer to the inside of the track. A car traveling on the outside track would be more efficent at gaining distance. 
 
 
+# Additional Notes
+The project and data collection was done on an online environment created by Professor Young Wu, a Artifical Intelligence professor at the University of Wisconsin - Madison. You can access his environment [here](https://pages.cs.wisc.edu/~yw/index.html). Since paths may be different in the training process for different developers, reproducing the same behaviors may be difficult. I have saved the weights in the file best_network.txt, which holds the formatted weights as per the websites specification. While observing the training process, I also saved the weights of networks that led to interesting behaviors in the "manual.txt" file. 
+
 
 
 
