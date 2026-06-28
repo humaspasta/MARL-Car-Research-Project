@@ -56,8 +56,8 @@ where we define functions d, S, A, and P as:
 - $$S(vx_{t+1} , vy_{t+1}, k)$$: The velocity award function. Awards or punishes any acceleration
     - $$\huge S(vx_{t+1} , vy_{t+1}, k) = k\sqrt{vx_{t+1}^2 + vy_{t+1}^2}$$
       
-- A(vx_{t} , vy_{t}, vx_{t+1}, vy_{t+1}): The turn penalty, punishes a change in angle (added to prevent perpetual spinning). Let v1 be the vector $$v1 = [vx_t , vy_t]^T$$ and v2 be the vector $$v2 = [vx_{t+1} , vy_{t+1}]^T$$. Then denote the euclidian norm $$<. , .>$$. We use the dot product identity to relate theta to the dot of vectors v1 and v2 and retrieve theta like so:
-    - $$\huge A(vx_{t} , vy_{t}, vx_{t+1}, vy_{t+1}) = arccos(\frac{<v1,v2>}{|v1||v2|})$$
+- A(vx_{t} , vy_{t}, vx_{t+1}, vy_{t+1}): The turn penalty, punishes a change in angle (added to prevent perpetual spinning). Let v1 be the vector $$v1 = [vx_t , vy_t]^T$$ and v2 be the vector $$v2 = [vx_{t+1} , vy_{t+1}]^T$$. Then denote the magnitude of the dot product $$|<. , .>|$$. We use the dot product identity to relate theta to the dot of vectors v1 and v2 and retrieve theta like so:
+    - $$\huge A(vx_{t} , vy_{t}, vx_{t+1}, vy_{t+1}) = arccos(\frac{|<v1,v2>|}{|v1||v2|})$$
 
 - $$P(sensor1, ..., sensork$$: returns the minimum sensor distance:
     - $$\huge P(sensor1, ..., sensork) = e^{-min(sensor1, ..., sensork)}$$
