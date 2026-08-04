@@ -1,4 +1,4 @@
-The Car project is a Multi-Agent Reinforcement Learning (MARL) project that seeks to maximize the total distance a car travels without crashing. The files here include all work that are relevant to creating the 
+The Car project is a RL project that seeks to maximize the total distance a car travels without crashing. The files here include all work that are relevant to creating the 
 best network I have so far stored in best_network.txt.
 
 The project specification is as follows:
