@@ -43,7 +43,7 @@ a fixed, pre-collected dataset.
 For each time step $t$, the environment returns a state tuple
  
 $$
-(a_t,\; x,\; y,\; v_x,\; v_y,\; \text{sensor}_1,\; \text{sensor}_2,\; \dots,\; \text{sensor}_n)
+(a_t, x, y, v_x, v_y, \text{sensor}_1, \text{sensor}_2, \dots, \text{sensor}_n)
 $$
  
 where $n$ is odd. Each sensor is a ray cast radially outward from the agent that returns
@@ -97,7 +97,7 @@ spinning policy. With $v_1 = [v_{x,t}, v_{y,t}]^\top$ and $v_2 = [v_{x,t+1}, v_{
 the angle between consecutive velocity vectors is recovered from the dot-product identity:
  
 $$
-A(v_1, v_2) = \arccos\!\left( \frac{|\langle v_1, v_2 \rangle|}{\|v_1\| \, \|v_2\|} \right)
+A(v_1, v_2) = \arccos\\left( \frac{|\langle v_1, v_2 \rangle|}{\|v_1\| \, \|v_2\|} \right)
 $$
  
 **Proximity penalty** $P$ — penalizes getting close to obstacles:
@@ -118,7 +118,7 @@ are $0.1,\ 0.001,\ -1,\ -3$ respectively.
 After roughly 5,000 training epochs, the car drives around the track on its own without
 hitting walls. It holds a nearly fixed distance from the inner wall, travels at a near-
 constant speed, and — when faced with an obstacle — dodges it and returns to its path.
-(More plots to come.)
+
  
 **Known limitations:**
  
