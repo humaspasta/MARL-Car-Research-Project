@@ -115,7 +115,7 @@ are $0.1,\ 0.001,\ -1,\ -3$ respectively.
  
 ## Results
  
-After roughly 5,000 training epochs, the car drives around the track on its own without
+After roughly in it's original training environment, 5,000 training epochs, the car drives around the track on its own without
 hitting walls. It holds a nearly fixed distance from the inner wall, travels at a near-
 constant speed, and — when faced with an obstacle — dodges it and returns to its path.
 
