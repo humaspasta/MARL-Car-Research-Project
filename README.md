@@ -1,79 +1,139 @@
-The Car project is a RL project that seeks to maximize the total distance a car travels without crashing. The files here include all work that are relevant to creating the 
-best network I have so far stored in best_network.txt.
+# Reinforcement Learning Car Agent
 
-The project specification is as follows:
+A reinforcement learning project that trains a car to maximize the total distance it
+travels around a confined, circular track without crashing. A single agent is trained
+in a **competitive, multi-car environment**: other cars share the track and collisions
+(with walls or other cars) reduce the agent's speed by 25%, but the learning itself is
+single-agent — one network learns to maximize its own distance. The best network found
+so far is saved in `best_network.txt`.
 
-The MARL car project seeks to maximize the distance traveled of a car in a confined, circular race track. The job of the agent is to compete for who can go the farthest. Crashes into other players and into the wall
-are not penalized explicity but do reduce the speed of the car by 25%. The score is calculated and the distance traveled in a fixed number of frames. 
+## Problem setup
 
-The action space for the purposes of the competition are assumed discrete. Therefore the agent must select from either turning left, turning right, speeding up, or do nothing given an input state. The do nothing
-action results in the slow but forward movement of the car so do nothing does not directly imply nothing happens in the simulation. 
+The agent competes to travel the farthest distance in a fixed number of frames.
+Collisions are not penalized explicitly, but they reduce the car's speed by 25%, so
+avoiding them is implicitly rewarded through the distance objective.
 
-# 1 Data Collection
+The action space is **discrete**: at each state the agent chooses to turn left, turn
+right, speed up, or do nothing. "Do nothing" still produces slow forward motion, so it
+is not a true no-op.
 
-All data collection and formatting is done useing selenium which scrapes an environment that exists on an online website. Since the mode of learning is offline, we collect tabular data from the website in the form of tuples. For each time step $$t$$, the website returns a tuple of the form $$(action , x , y vx, vy , sensor1, sensor2, sensor3,...sensor n)$$ where n is an odd integer from some $$T > 0$$ time total steps. Each sensor is a line that shoots radially outward from the agent and returns the distance from the agent to where the line intersects with an object (another car or the track walls).
+## Repository structure
 
-The data collection step involves building the **agent.py** class. This class scrapes the website, inputs the networks values (with correct formatting) and allows the simulation to run until 1000+ steps are collected. 
-When the states appear in the box, the agent formats the data into (state, action, reward) tuples and returns the data as is. The pipelines summary is therefore
+| File | Purpose |
+| --- | --- |
+| `agent.py` | Selenium bridge to the environment: loads network weights, runs the simulation, scrapes states, and computes rewards |
+| `DQN.py` | Network definitions (the shared MLP used for both DQN and policy gradient) |
+| `training.py` | Training loops (policy gradient / REINFORCE and DQN) |
+| `Main.py` | Entry point that runs the training loop |
+| `best_network.txt` | Best network weights found, in the environment's expected format |
+| `manual.txt` | Weights for networks that produced interesting behaviors during training |
 
-### agent.py -> website -> data formatter (in agent.py) -> formatted data. 
+## Tech stack
 
-When the data is formatted we input the data into the model. Note that the reward is calculated within the agent.py class. 
+Python, PyTorch, Selenium, NumPy.
 
-# 1 Training 
+## 1. Data collection
 
-The training involves three different pieces:
+Data collection and formatting are handled with **Selenium**, which drives a browser-based
+simulator hosted online. Each training iteration, the agent loads the current network's
+weights into the environment, runs the simulation, and scrapes the resulting sequence of
+states — so it collects fresh rollouts under the current policy rather than learning from
+a fixed, pre-collected dataset.
 
-1) The model
-2) the reward function
-3) the training algorithm
-
-# The Model
-
-The model is a sequential neural network, the same model is used for both DQN and Policy gradient methods. The model consists of the following layers
-
-## Linear(n , 50) -> ReLu -> Linear(50 , 25) -> ReLu -> Linear(25 , 4) 
-
-The output layer values correspond to the 4 possible actions in the action space. 
-
-# 2 Reward function
-
-The reward function was created the way it is as a result of trial and error. One of the largest things that I struggled on in this project was finding a way to reward good decisions without indrecitly encouraging bad ones. Some examples of degenerative policies that my model found was either perpetually spinning policy (maximizes sensor values) or a speed up only policy (maximizes distance traveled. Ignores collisions). 
-
-
-The current reward function works as follows.
-
-Given a state $$s_t$$, corresponding state $s_{t+1}$, initial state $$s_0$$, and reward function $$R(t):S^3 \rightarrow \mathbb{R}$$
+For each time step $t$, the environment returns a state tuple
 
 $$
-  \huge R(s_t , s_{t+1}, s_0) = \alpha* d(x_t , y_t , x_t{t+1} , y_{t+1}) + \beta S(vx_{t+1} , vy_{t+1} , k) + \gamma A(vx_{t} , vy_{t}, vx_{t+1}, vy_{t+1}) + \nu P(sensor1, sensor2,...,sensork)
+(a_t,\; x,\; y,\; v_x,\; v_y,\; \text{sensor}_1,\; \text{sensor}_2,\; \dots,\; \text{sensor}_n)
 $$
 
-where we define functions d, S, A, and P as:
+where $n$ is odd. Each sensor is a ray cast radially outward from the agent that returns
+the distance to the nearest object it intersects (another car or a track wall).
 
-- $$d(x_t , y_t ,  x_{t+1} , y_{t+1})$$: The standard eucldian distanec function.
-    - $$\huge d(x_t , y_t ,  x_{t+1} , y_{t+1}) = \sqrt{(x_t - x_{t+1})^2 + (y_t - y_{t+1})^2)}$$
-- $$S(vx_{t+1} , vy_{t+1}, k)$$: The velocity award function. Awards or punishes any acceleration
-    - $$\huge S(vx_{t+1} , vy_{t+1}, k) = \sqrt{vx_{t+1}^2 + vy_{t+1}^2}$$
-      
-- A(vx_{t} , vy_{t}, vx_{t+1}, vy_{t+1}): The turn penalty, punishes a change in angle (added to prevent perpetual spinning). Let v1 be the vector $$v1 = [vx_t , vy_t]^T$$ and v2 be the vector $$v2 = [vx_{t+1} , vy_{t+1}]^T$$. Then denote the magnitude of the dot product $$|<. , .>|$$. We use the dot product identity to relate theta to the dot of vectors v1 and v2 and retrieve theta like so:
-    - $$\huge A(vx_{t} , vy_{t}, vx_{t+1}, vy_{t+1}) = arccos(\frac{|<v1,v2>|}{|v1||v2|})$$
+`agent.py` handles this loop: it scrapes the website, injects the network's weights in the
+required format, lets the simulation run until 1,000+ steps are collected, and formats the
+output into `(state, action, reward)` tuples. The reward is computed inside `agent.py`.
 
-- $$P(sensor1, ..., sensork$$: returns the minimum sensor distance:
-    - $$\huge P(sensor1, ..., sensork) = e^{-min(sensor1, ..., sensork)}$$
-My reason for using e here was being exponential functions (with a negative coefficent) will increasingly punish the agent with a punishment closer to 1 as the agent approaches a target. This provides a layer of sensativity that can be increased by adjusting $$\nu$$ where lower values of $$\nu$$ will increasingly punish the agent. 
+**Pipeline:** `agent.py` → website → data formatter (in `agent.py`) → formatted data.
 
-Constants $\alpha, \beta, \gamma, \nu$ are intended to weight each of these values accordingly. In my program, my weights are 0.1, 0.001, -1, -3 respectively. 
+## 2. The model
 
+A sequential MLP, shared across both the DQN and policy gradient methods:
 
-# Results
+$$
+\text{Linear}(n, 50) \rightarrow \text{ReLU} \rightarrow \text{Linear}(50, 25) \rightarrow \text{ReLU} \rightarrow \text{Linear}(25, 4)
+$$
 
-After about 5000 training epochs, the car could sucessfully drive on its own around the track without bumping into any walls. The car maintains a nearly fixed distance from the internal wall and travels around the track at a near constant speed (more plots on this soon). When faced with an obstruction, the car will dodge it and return back to its intended track of motion. An issue that occurs with the setup is that equidistant sensors makes it harder for the car to see well in advance since some targets slip the view of the sensors until its too late for the agent to dodge. A simple fix to this would be a larger model with more sensors or perhaps letting the sensors not be equidistant from each other and instead concentrate them at the front of the car to detect the path of motion. The car also tends to take a path that is closer to the inside of the track. A car traveling on the outside track would be more efficent at gaining distance. 
+The four output values correspond to the four discrete actions.
 
+## 3. The reward function
 
-# Additional Notes
-The project and data collection was done on an online environment created by Professor Young Wu, a Artifical Intelligence professor at the University of Wisconsin - Madison. You can access his environment [here](https://pages.cs.wisc.edu/~yw/index.html). Since paths may be different in the training process for different developers, reproducing the same behaviors may be difficult. I have saved the weights in the file best_network.txt, which holds the formatted weights as per the websites specification. While observing the training process, I also saved the weights of networks that led to interesting behaviors in the "manual.txt" file. 
+The reward function was designed through trial and error. The central challenge was
+rewarding good behavior without *implicitly* encouraging bad behavior. Two degenerate
+policies the agent discovered early on were:
 
+- **Perpetual spinning** — maximizing sensor values by circling in place.
+- **Speed-only** — maximizing distance while ignoring collisions.
 
+The final reward combines four terms. Given the current state $s_t$, next state
+$s_{t+1}$, and initial state $s_0$:
 
+$$
+R(s_t, s_{t+1}, s_0) = \alpha \, d + \beta \, S + \gamma \, A + \nu \, P
+$$
 
+**Displacement** $d$ — Euclidean distance moved between steps:
+
+$$
+d(x_t, y_t, x_{t+1}, y_{t+1}) = \sqrt{(x_t - x_{t+1})^2 + (y_t - y_{t+1})^2}
+$$
+
+**Speed** $S$ — magnitude of the velocity, rewarding forward motion:
+
+$$
+S(v_{x,t+1}, v_{y,t+1}) = \sqrt{v_{x,t+1}^2 + v_{y,t+1}^2}
+$$
+
+**Turn penalty** $A$ — penalizes changes in heading, added specifically to kill the
+spinning policy. With $v_1 = [v_{x,t}, v_{y,t}]^\top$ and $v_2 = [v_{x,t+1}, v_{y,t+1}]^\top$,
+the angle between consecutive velocity vectors is recovered from the dot-product identity:
+
+$$
+A(v_1, v_2) = \arccos\!\left( \frac{|\langle v_1, v_2 \rangle|}{\|v_1\| \, \|v_2\|} \right)
+$$
+
+**Proximity penalty** $P$ — penalizes getting close to obstacles:
+
+$$
+P(\text{sensor}_1, \dots, \text{sensor}_k) = e^{-\min(\text{sensor}_1, \dots, \text{sensor}_k)}
+$$
+
+An exponential is used so the penalty rises sharply toward 1 as the nearest obstacle
+approaches, giving the agent increasing sensitivity as it nears a collision. The
+weight $\nu$ tunes that sensitivity.
+
+The weights $\alpha, \beta, \gamma, \nu$ balance the four terms. In this project they
+are $0.1,\ 0.001,\ -1,\ -3$ respectively.
+
+## Results
+
+After roughly 5,000 training epochs, the car drives around the track on its own without
+hitting walls. It holds a nearly fixed distance from the inner wall, travels at a near-
+constant speed, and — when faced with an obstacle — dodges it and returns to its path.
+(More plots to come.)
+
+**Known limitations:**
+
+- **Sensor layout.** Equidistant sensors limit foresight: some obstacles slip between
+  sensor rays until it is too late to react. Concentrating more sensors toward the front
+  of the car, or adding sensors overall, would improve early detection.
+- **Path choice.** The agent tends to hug the inside of the track. A path along the
+  outside would cover more distance per lap and be more efficient.
+
+## Notes
+
+The environment was created by Professor Young Wu, an Artificial Intelligence professor
+at the University of Wisconsin–Madison; it is available
+[here](https://pages.cs.wisc.edu/~yw/index.html). Because file paths differ between
+setups, reproducing identical behavior can be difficult. The best weights are saved in
+`best_network.txt` (formatted to the environment's specification), and weights that
+produced notable behaviors during training are saved in `manual.txt`.
